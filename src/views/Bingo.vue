@@ -45,7 +45,7 @@
         GEWONNEN!
       </h1>
       <div
-        v-if="myWords.length > 24"
+        v-if="hasWords && myWords.length > 24"
         id="game"
         class="columns is-flex is-flex-direction-row is-flex-wrap-wrap"
       >
@@ -71,12 +71,15 @@ export default {
   name: 'Bingo',
   data: function () {
     return {
-      myWords: null
+      myWords: []
     }
   },
   computed: {
     id () {
       return this.$route.params.id
+    },
+    hasWords () {
+      return this.myWords && this.myWords.length > 0
     },
     hasWon () {
       if (!this.myWords || this.myWords.length < 25) return false
@@ -133,7 +136,7 @@ export default {
     }
   },
   created () {
-    this.myWords = JSON.parse(window.localStorage.getItem(this.id))
+    this.myWords = JSON.parse(window.localStorage.getItem(this.id)) || []
   },
   methods: {
     shuffle (a) {
@@ -167,7 +170,9 @@ export default {
       window.localStorage.setItem(this.id, JSON.stringify(myWords))
     },
     resetClicks () {
-      this.myWords.forEach(x => {
+      console.log(this.myWords)
+      this.myWords.forEach((x, idx) => {
+        if (idx === 12) return
         x.clicked = false
       })
       window.localStorage.setItem(this.id, JSON.stringify(this.myWords))

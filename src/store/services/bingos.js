@@ -1,24 +1,27 @@
 // src/store/services/users.js
 import feathersClient, { makeServicePlugin, BaseModel } from '../../feathers-client'
 
-class Words extends BaseModel {
+class Bingos extends BaseModel {
   /* eslint-disable no-useless-constructor */
   constructor (data, options) {
     super(data, options)
   }
 
   // Required for $FeathersVuex plugin to work after production transpile.
-  static modelName = 'Words'
+  static modelName = 'Bingos'
   // Define default properties here
   static instanceDefaults () {
     return {
-      name: ''
+      name: '',
+      description: '',
+      topics: [],
+      words: []
     }
   }
 }
-const servicePath = 'words'
+const servicePath = 'bingos'
 const servicePlugin = makeServicePlugin({
-  Model: Words,
+  Model: Bingos,
   service: feathersClient.service(servicePath),
   servicePath
 })
