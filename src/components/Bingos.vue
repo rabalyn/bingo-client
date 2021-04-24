@@ -54,11 +54,19 @@
           >
             Lade Bingodetails
           </b-button>
+          <scroll-to-top>
+            <b-button
+              class="mx-1 my-2"
+              @click="loadBingoEdit(bingo)"
+            >
+              Editiere Bingo
+            </b-button>
+          </scroll-to-top>
           <b-button
             class="mx-1 my-2"
-            @click="loadBingoEdit(bingo)"
+            @click="removeBingo(bingo)"
           >
-            Editiere Bingo
+            Lösche Bingo
           </b-button>
         </div>
       </div>
@@ -68,11 +76,13 @@
 
 <script>
 import BingoForm from './BingoForm.vue'
+import ScrollToTop from './ScrollToTop.vue'
 
 export default {
   name: 'Bingos',
   components: {
-    BingoForm
+    BingoForm,
+    ScrollToTop
   },
   data: function () {
     return {
@@ -92,6 +102,16 @@ export default {
       this.editBingo.description = bingo.description
       this.editBingo.words = bingo.words
       this.editBingo.topics = bingo.topics
+    },
+    removeBingo (bingo) {
+      bingo.words = []
+      bingo.topics = []
+      this.editBingo.id = null
+      this.editBingo.name = ''
+      this.editBingo.description = ''
+      this.editBingo.words = []
+      this.editBingo.topics = []
+      bingo.remove()
     }
   }
 }
