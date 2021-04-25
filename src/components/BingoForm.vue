@@ -79,7 +79,7 @@
       <b-button
         class="my-4 mx-5 is-success is-light"
         :disabled="!(bingoNameType === 'is-success' && bingoDescriptionType === 'is-success')"
-        @click="saveBingo"
+        @click="saveAndResetBingo"
       >
         Speichern
       </b-button>
@@ -96,10 +96,6 @@ export default {
     Autocomplete
   },
   props: {
-    refresh: {
-      type: Boolean,
-      default: false
-    },
     editBingo: {
       type: Object,
       default: function () {
@@ -170,6 +166,10 @@ export default {
         name: word.name
       })
       this.newBingo.words.push(newWord)
+
+      if (this.bingoNameType === 'is-success' && this.bingoDescriptionType === 'is-success') {
+        this.saveBingo()
+      }
     },
     addTopic (topic) {
       if (!topic) return
@@ -182,6 +182,13 @@ export default {
         name: topic.name
       })
       this.newBingo.topics.push(newTopic)
+
+      if (this.bingoNameType === 'is-success' && this.bingoDescriptionType === 'is-success') {
+        this.saveBingo()
+      }
+    },
+    resetNewBingo () {
+      this.newBingo = new this.$FeathersVuex.api.Bingos()
     },
     async saveBingo () {
       const { Bingos, Words, Topics } = this.$FeathersVuex.api
@@ -221,12 +228,13 @@ export default {
       try {
         await bingo.save()
         this.showSaveSuccessfulToast()
-        this.$emit('update:refresh', true)
-
-        this.newBingo = new this.$FeathersVuex.api.Bingos()
       } catch (error) {
         this.showSaveFailedToast(error)
       }
+    },
+    async saveAndResetBingo () {
+      await this.saveBingo()
+      this.resetNewBingo()
     },
     showSaveSuccessfulToast () {
       this.$buefy.toast.open({

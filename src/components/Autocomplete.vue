@@ -110,11 +110,8 @@ export default {
         id: option.id,
         name: option.name
       })
-      console.log('this.value: ', this.value)
       this.value = ''
-      console.log('this.value: ', this.value)
       this.selectAction(newObj)
-      console.log('this.value: ', this.value)
     }
   }
 }

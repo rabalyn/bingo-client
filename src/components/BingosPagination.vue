@@ -1,6 +1,6 @@
 <template>
   <div class="columns">
-    <div class="column is-6" />
+    <div class="column is-5" />
     <div class="column is-3">
       <b-dropdown
         v-model="innerLimit"
@@ -11,14 +11,12 @@
             {{ limit }} pro Seite
           </b-button>
         </template>
-        <b-dropdown-item :value="5">
-          5
-        </b-dropdown-item>
-        <b-dropdown-item :value="10">
-          10
-        </b-dropdown-item>
-        <b-dropdown-item :value="15">
-          15
+        <b-dropdown-item
+          v-for="pageSize in pageSizes"
+          :key="pageSize"
+          :value="pageSize"
+        >
+          {{ pageSize }}
         </b-dropdown-item>
       </b-dropdown>
 
@@ -39,7 +37,7 @@
         </b-dropdown-item>
       </b-dropdown>
     </div>
-    <div class="column is-3">
+    <div class="column is-4">
       <b-pagination
         v-model="innerCurrent"
         :total="total"
@@ -72,6 +70,12 @@ export default {
     order: {
       type: Number,
       default: -1
+    },
+    pageSizes: {
+      type: Array,
+      default: function () {
+        return [2, 5, 10, 15]
+      }
     }
   },
   data: function () {

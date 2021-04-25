@@ -1,110 +1,102 @@
 <template>
-  <FeathersVuexFind
-    v-slot="{ isFindPending, items: bingos }"
-    service="bingos"
-    :params="internalParams"
-    :fetch-params="fetchParams"
-    :edit-scope="getPaginationInfo"
-    watch="params"
-  >
-    <div class="container">
-      <b-loading :active="isFindPending" />
+  <div class="container">
+    <b-loading :active="isFindBingosPending" />
 
-      <div class="columns">
-        <bingo-form
-          :edit-bingo="editBingo"
-          :refresh.sync="refresh"
-        />
-      </div>
-
-      <bingos-pagination
-        :current.sync="current"
-        :limit.sync="limit"
-        :total.sync="total"
-        :order.sync="order"
-      />
-
-      <div
-        v-for="bingo in bingos"
-        :key="bingo.id"
-        class="card mx-3 my-3 column"
-      >
-        <header class="card-header">
-          <p class="card-header-title">
-            {{ bingo.name }}
-          </p>
-          <p>
-            {{ new Date(bingo.createdAt).toLocaleString() }}
-          </p>
-        </header>
-        <div class="card-content">
-          <div class="content">
-            <h4>
-              Beschreibung: {{ bingo.description }}
-            </h4>
-
-            <h5>Bingowörter ({{ bingo.words.length }})</h5>
-            <b-taglist>
-              <b-tag
-                v-for="word in bingo.words"
-                :key="word.id"
-              >
-                {{ word.name }}
-              </b-tag>
-            </b-taglist>
-
-            <h5>Kategorien ({{ bingo.topics.length }})</h5>
-            <b-taglist>
-              <b-tag
-                v-for="topic in bingo.topics"
-                :key="topic.id"
-              >
-                {{ topic.name }}
-              </b-tag>
-            </b-taglist>
-          </div>
-        </div>
-        <div class="card-footer">
-          <b-button
-            class="mx-1 my-2"
-            type="is-info is-light"
-            @click="$router.push(`bingos/${bingo.id}`)"
-          >
-            Lade Bingodetails
-          </b-button>
-          <scroll-to-top>
-            <b-button
-              class="mx-1 my-2"
-              type="is-warning is-light"
-              @click="loadBingoEdit(bingo)"
-            >
-              Editiere Bingo
-            </b-button>
-          </scroll-to-top>
-          <b-button
-            class="mx-1 my-2"
-            type="is-danger is-light"
-            @click="removeBingo(bingo)"
-          >
-            Lösche Bingo
-          </b-button>
-        </div>
-      </div>
-
-      <bingos-pagination
-        :current.sync="current"
-        :limit.sync="limit"
-        :total.sync="total"
-        :order.sync="order"
+    <div class="columns">
+      <bingo-form
+        :edit-bingo="editBingo"
       />
     </div>
-  </FeathersVuexFind>
+
+    <bingos-pagination
+      :current.sync="current"
+      :limit.sync="limit"
+      :total.sync="total"
+      :order.sync="order"
+    />
+
+    <div
+      v-for="bingo in bingosFetched"
+      :key="bingo.id"
+      class="card mx-3 my-3 column"
+    >
+      <header class="card-header">
+        <p class="card-header-title">
+          {{ bingo.name }}
+        </p>
+        <p>
+          {{ new Date(bingo.updatedAt).toLocaleString() }}
+        </p>
+      </header>
+      <div class="card-content">
+        <div class="content">
+          <h4>
+            Beschreibung: {{ bingo.description }}
+          </h4>
+
+          <h5>Bingowörter ({{ bingo.words.length }})</h5>
+          <b-taglist>
+            <b-tag
+              v-for="word in bingo.words"
+              :key="word.id"
+            >
+              {{ word.name }}
+            </b-tag>
+          </b-taglist>
+
+          <h5>Kategorien ({{ bingo.topics.length }})</h5>
+          <b-taglist>
+            <b-tag
+              v-for="topic in bingo.topics"
+              :key="topic.id"
+            >
+              {{ topic.name }}
+            </b-tag>
+          </b-taglist>
+        </div>
+      </div>
+      <div class="card-footer">
+        <b-button
+          class="mx-1 my-2"
+          type="is-info is-light"
+          @click="$router.push(`bingos/${bingo.id}`)"
+        >
+          Lade Bingodetails
+        </b-button>
+        <scroll-to-top>
+          <b-button
+            class="mx-1 my-2"
+            type="is-warning is-light"
+            @click="loadBingoEdit(bingo)"
+          >
+            Editiere Bingo
+          </b-button>
+        </scroll-to-top>
+        <b-button
+          class="mx-1 my-2"
+          type="is-danger is-light"
+          @click="removeBingo(bingo)"
+        >
+          Lösche Bingo
+        </b-button>
+      </div>
+    </div>
+
+    <bingos-pagination
+      :current.sync="current"
+      :limit.sync="limit"
+      :total.sync="total"
+      :order.sync="order"
+    />
+  </div>
 </template>
 
 <script>
 import BingoForm from './BingoForm.vue'
 import BingosPagination from './BingosPagination.vue'
 import ScrollToTop from './ScrollToTop.vue'
+
+import { makeFindMixin } from 'feathers-vuex'
 
 export default {
   name: 'Bingos',
@@ -113,14 +105,14 @@ export default {
     BingosPagination,
     ScrollToTop
   },
+  mixins: [makeFindMixin({ service: 'bingos', watch: true })],
   data: function () {
     return {
-      refresh: false,
       service: 'bingos',
       ids: [],
       order: -1,
       total: 0,
-      limit: 5,
+      limit: 2,
       skip: 0,
       current: 1,
 
@@ -134,16 +126,7 @@ export default {
     }
   },
   computed: {
-    params () {
-      return {
-        query: {
-          $sort: {
-            createdAt: this.order
-          }
-        }
-      }
-    },
-    internalParams () {
+    bingosParams () {
       const { idField } = this.$store.state[this.service]
       return {
         query: {
@@ -151,39 +134,36 @@ export default {
             $in: this.ids
           },
           $sort: {
-            createdAt: this.order
+            updatedAt: this.order
           }
         }
       }
     },
-    fetchParams () {
-      const query = Object.assign(
-        {},
-        this.params.query,
-        {
+    bingosFetchParams () {
+      return {
+        query: {
           $limit: this.limit,
-          $skip: this.skip
-        }
-      )
-
-      return Object.assign({}, this.params, { query })
+          $skip: this.skip,
+          $sort: {
+            updatedAt: this.order
+          }
+        },
+        debounce: 500
+      }
     }
   },
   watch: {
     current () {
       this.skip = this.limit * (this.current - 1)
     },
-    refresh () {
-      if (this.refresh) {
-        this.current += 1
-        this.$nextTick(() => {
-          this.current -= 1
-          this.refresh = false
-        })
-      }
+    bingos () {
+      this.findBingos()
     }
   },
   methods: {
+    refresh () {
+      this.findBingos()
+    },
     getPaginationInfo (scope) {
       const { queryInfo, pageInfo } = scope
 
@@ -209,12 +189,7 @@ export default {
       this.editBingo.words = []
       this.editBingo.topics = []
       await bingo.remove()
-
-      await this.$store.dispatch('bingos/find', this.fetchParams)
-      this.current += 1
-      this.$nextTick(() => {
-        this.current -= 1
-      })
+      this.refresh()
     }
   }
 }
