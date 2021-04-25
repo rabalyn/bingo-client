@@ -11,7 +11,7 @@
     <bingos-pagination
       :current.sync="current"
       :limit.sync="limit"
-      :total.sync="total"
+      :total="total"
       :order.sync="order"
     />
 
@@ -98,6 +98,7 @@ import ScrollToTop from './ScrollToTop.vue'
 
 import { makeFindMixin } from 'feathers-vuex'
 
+const service = 'bingos'
 export default {
   name: 'Bingos',
   components: {
@@ -105,16 +106,13 @@ export default {
     BingosPagination,
     ScrollToTop
   },
-  mixins: [makeFindMixin({ service: 'bingos', watch: true })],
+  mixins: [makeFindMixin({ service, watch: true, qid: `${service}List` })],
   data: function () {
     return {
-      service: 'bingos',
-      ids: [],
       order: -1,
-      total: 0,
+      current: 1,
       limit: 2,
       skip: 0,
-      current: 1,
 
       editBingo: {
         id: null,
@@ -126,20 +124,10 @@ export default {
     }
   },
   computed: {
-    bingosParams () {
-      const { idField } = this.$store.state[this.service]
-      return {
-        query: {
-          [idField]: {
-            $in: this.ids
-          },
-          $sort: {
-            updatedAt: this.order
-          }
-        }
-      }
+    qid () {
+      return `${service}List`
     },
-    bingosFetchParams () {
+    bingosParams () {
       return {
         query: {
           $limit: this.limit,
@@ -148,8 +136,12 @@ export default {
             updatedAt: this.order
           }
         },
-        debounce: 500
+        paginate: false // This restores previous functionality
       }
+    },
+    total () {
+      if (!this?.bingosPaginationData[this.qid]?.mostRecent?.total) return -1
+      return this.bingosPaginationData[this.qid].mostRecent.total
     }
   },
   watch: {
@@ -163,14 +155,6 @@ export default {
   methods: {
     refresh () {
       this.findBingos()
-    },
-    getPaginationInfo (scope) {
-      const { queryInfo, pageInfo } = scope
-
-      this.total = queryInfo.total
-      if (pageInfo && pageInfo.ids) {
-        this.ids = pageInfo.ids
-      }
     },
     loadBingoEdit (bingo) {
       this.editBingo.id = bingo.id

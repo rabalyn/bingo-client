@@ -81,7 +81,6 @@ export default {
   data: function () {
     return {
       innerCurrent: 1,
-      innerTotal: -1,
       innerLimit: 5,
       innerOrder: -1
     }

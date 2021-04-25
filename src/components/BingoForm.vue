@@ -25,7 +25,7 @@
             type="text"
             required
             minlength="5"
-            maxlength="255"
+            maxlength="1023"
           />
         </b-field>
       </p>
@@ -122,7 +122,7 @@ export default {
       return ''
     },
     bingoDescriptionType () {
-      if (this.newBingo.description && this.newBingo.description.length >= 5 && this.newBingo.description.length <= 255) return 'is-success'
+      if (this.newBingo.description && this.newBingo.description.length >= 5 && this.newBingo.description.length <= 1023) return 'is-success'
       else if (this.newBingo.description) return 'is-danger'
 
       return ''
