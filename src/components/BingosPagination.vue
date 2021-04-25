@@ -1,7 +1,7 @@
 <template>
   <div class="columns">
-    <div class="column is-7" />
-    <div class="column is-2">
+    <div class="column is-6" />
+    <div class="column is-3">
       <b-dropdown
         v-model="innerLimit"
         @change="$emit('update:limit', $event)"
