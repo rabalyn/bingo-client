@@ -111,7 +111,7 @@ export default {
     return {
       order: -1,
       current: 1,
-      limit: 2,
+      limit: 5,
       skip: 0,
 
       editBingo: {
