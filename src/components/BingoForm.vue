@@ -2,30 +2,49 @@
   <div class="card mx-3 my-3 column">
     <div class="card-content">
       <p class="title">
-        <b-field label="Bingotitel">
-          <b-input v-model="newBingo.name" />
+        <b-field
+          label="Bingotitel*"
+          :type="bingoNameType"
+        >
+          <b-input
+            v-model="newBingo.name"
+            type="text"
+            required
+            minlength="2"
+            maxlength="255"
+          />
         </b-field>
       </p>
       <p class="subtitle">
-        <b-field label="Beschreibung">
-          <b-input v-model="newBingo.description" />
+        <b-field
+          label="Beschreibung*"
+          :type="bingoDescriptionType"
+        >
+          <b-input
+            v-model="newBingo.description"
+            type="text"
+            required
+            minlength="5"
+            maxlength="255"
+          />
         </b-field>
       </p>
+
       <div class="content">
+        <h3>Bingowörter</h3>
         <autocomplete
           column="name"
-          label="Wort"
           placeholder="neues Bingowort..."
           :query-limit="5"
           service="words"
           :select-action="addWord"
         />
-        <h3>Bingowörter</h3>
-        <b-taglist>
+
+        <b-taglist class="mt-2">
           <b-tag
             v-for="(word, idx) in newBingo.words"
             :key="word.id"
-            type="is-info"
+            type="is-info is-light"
             closable
             @close="newBingo.words.splice(idx, 1)"
           >
@@ -33,20 +52,20 @@
           </b-tag>
         </b-taglist>
 
+        <h3>Kategorien</h3>
         <autocomplete
           column="name"
-          label="Kategorie"
           placeholder="neue Kategorie..."
           :query-limit="5"
           service="topics"
           :select-action="addTopic"
         />
-        <h3>Kategorien</h3>
-        <b-taglist>
+
+        <b-taglist class="mt-2">
           <b-tag
             v-for="(topic, idx) in newBingo.topics"
             :key="topic.id"
-            type="is-info"
+            type="is-info is-light"
             closable
             @close="newBingo.topics.splice(idx, 1)"
           >
@@ -59,6 +78,7 @@
     <div class="card-footer is-pulled-right">
       <b-button
         class="my-4 mx-5 is-success is-light"
+        :disabled="!(bingoNameType === 'is-success' && bingoDescriptionType === 'is-success')"
         @click="saveBingo"
       >
         Speichern
@@ -76,6 +96,10 @@ export default {
     Autocomplete
   },
   props: {
+    refresh: {
+      type: Boolean,
+      default: false
+    },
     editBingo: {
       type: Object,
       default: function () {
@@ -95,6 +119,18 @@ export default {
     }
   },
   computed: {
+    bingoNameType () {
+      if (this.newBingo.name && this.newBingo.name.length >= 2 && this.newBingo.name.length <= 255) return 'is-success'
+      else if (this.newBingo.name) return 'is-danger'
+
+      return ''
+    },
+    bingoDescriptionType () {
+      if (this.newBingo.description && this.newBingo.description.length >= 5 && this.newBingo.description.length <= 255) return 'is-success'
+      else if (this.newBingo.description) return 'is-danger'
+
+      return ''
+    },
     filteredWords () {
       const { Words } = this.$FeathersVuex.api
       const storeWords = Words.findInStore({ query: {} })
@@ -182,7 +218,28 @@ export default {
         words: this.newBingo.words
       })
 
-      await bingo.save()
+      try {
+        await bingo.save()
+        this.showSaveSuccessfulToast()
+        this.$emit('update:refresh', true)
+
+        this.newBingo = new this.$FeathersVuex.api.Bingos()
+      } catch (error) {
+        this.showSaveFailedToast(error)
+      }
+    },
+    showSaveSuccessfulToast () {
+      this.$buefy.toast.open({
+        message: 'Bingo gespeichert',
+        type: 'is-success'
+      })
+    },
+    showSaveFailedToast (error) {
+      console.error(error)
+      this.$buefy.toast.open({
+        message: 'Fehler, Bingo wurde nicht gespeichert.',
+        type: 'is-danger'
+      })
     }
   }
 

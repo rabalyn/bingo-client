@@ -26,6 +26,7 @@
           :placeholder="placeholder"
           icon="magnify"
           clearable
+          :clear-on-select="true"
           field="name"
           @select="option => (triggerSelectAction(option))"
         >
@@ -73,8 +74,7 @@ export default {
   },
   data () {
     return {
-      value: '',
-      selected: null
+      value: ''
     }
   },
   computed: {
@@ -110,9 +110,11 @@ export default {
         id: option.id,
         name: option.name
       })
-      this.selectAction(newObj)
+      console.log('this.value: ', this.value)
       this.value = ''
-      this.selected = null
+      console.log('this.value: ', this.value)
+      this.selectAction(newObj)
+      console.log('this.value: ', this.value)
     }
   }
 }

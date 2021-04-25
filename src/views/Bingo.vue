@@ -12,7 +12,7 @@
       <h4>{{ bingo.description }}</h4>
       <div class="columns">
         <div class="column">
-          <b-taglist v-if="bingo.topics[0]">
+          <b-taglist>
             <b-tag
               v-for="topic in bingo.topics"
               :key="topic.id"
@@ -56,7 +56,7 @@
           :class="{'highlight': word.clicked}"
           @click="toggleClicked(idx)"
         >
-          {{ idx }}: {{ word.name }}
+          {{ word.name }}
         </div>
       </div>
       <div v-else>
@@ -137,6 +137,14 @@ export default {
   },
   created () {
     this.myWords = JSON.parse(window.localStorage.getItem(this.id)) || []
+
+    if (!this.myWords[0]) {
+      const { Bingos } = this.$FeathersVuex.api
+      Bingos.get(this.id, { query: {} })
+        .then((bingo) => {
+          this.reshuffleWords(bingo)
+        })
+    }
   },
   methods: {
     shuffle (a) {
@@ -170,7 +178,6 @@ export default {
       window.localStorage.setItem(this.id, JSON.stringify(myWords))
     },
     resetClicks () {
-      console.log(this.myWords)
       this.myWords.forEach((x, idx) => {
         if (idx === 12) return
         x.clicked = false

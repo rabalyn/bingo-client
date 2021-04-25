@@ -12,7 +12,7 @@
 export default {
   data () {
     return {
-      visible: false
+      visible: true
     }
   },
   mounted: function () {
@@ -31,7 +31,7 @@ export default {
       }, 20)
     },
     scrollListener: function (e) {
-      this.visible = window.scrollY > 150
+      // this.visible = window.scrollY > 150
     }
   }
 }
