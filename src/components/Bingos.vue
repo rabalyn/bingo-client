@@ -106,7 +106,11 @@ export default {
     BingosPagination,
     ScrollToTop
   },
-  mixins: [makeFindMixin({ service, watch: true, qid: `${service}List` })],
+  mixins: [makeFindMixin({
+    service,
+    watch: true,
+    qid: `${service}List`
+  })],
   data: function () {
     return {
       order: -1,
