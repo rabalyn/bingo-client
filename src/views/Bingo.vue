@@ -52,7 +52,7 @@
         <div
           v-for="(word, idx) in myWords || getMyWords(bingo)"
           :key="word.id"
-          class="column is-one-fifth has-text-weight-bold is-size-4 is-flex is-justify-content-center is-align-items-center field"
+          class="column is-one-fifth has-text-weight-bold is-size-5 is-flex is-justify-content-center is-align-items-center field"
           :class="{'highlight': word.clicked}"
           @click="toggleClicked(idx)"
         >
