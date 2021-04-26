@@ -22,11 +22,24 @@
     >
       <header class="card-header">
         <p class="card-header-title">
-          {{ bingo.name }}
+          {{ bingo.name }} <span
+            v-if="bingo.owner"
+            class="mx-2"
+          >Besitzer: {{ bingo.owner.name }}</span>
         </p>
         <p>
           {{ new Date(bingo.updatedAt).toLocaleString() }}
         </p>
+        <span class="mx-2">
+          <b-icon
+            v-if="bingo.is_private"
+            icon="lock"
+          />
+          <b-icon
+            v-else
+            icon="earth"
+          />
+        </span>
       </header>
       <div class="card-content">
         <div class="content">
@@ -65,6 +78,7 @@
         </b-button>
         <scroll-to-top>
           <b-button
+            v-if="bingo.is_private === false || (user && user.id === bingo.user_id)"
             class="mx-1 my-2"
             type="is-warning is-light"
             @click="loadBingoEdit(bingo)"
@@ -73,6 +87,7 @@
           </b-button>
         </scroll-to-top>
         <b-button
+          v-if="bingo.is_private === false || (user && user.id === bingo.user_id)"
           class="mx-1 my-2"
           type="is-danger is-light"
           @click="removeBingo(bingo)"
@@ -120,6 +135,8 @@ export default {
 
       editBingo: {
         id: null,
+        owner: null,
+        is_private: false,
         name: '',
         description: '',
         words: [],
@@ -128,6 +145,9 @@ export default {
     }
   },
   computed: {
+    user () {
+      return this.$store.state.auth.user
+    },
     qid () {
       return `${service}List`
     },
@@ -162,6 +182,8 @@ export default {
     },
     loadBingoEdit (bingo) {
       this.editBingo.id = bingo.id
+      this.editBingo.owner = bingo.owner
+      this.editBingo.is_private = bingo.is_private
       this.editBingo.name = bingo.name
       this.editBingo.description = bingo.description
       this.editBingo.words = bingo.words
@@ -172,6 +194,8 @@ export default {
       bingo.topics = []
       await bingo.save()
       this.editBingo.id = null
+      this.editBingo.owner = null
+      this.editBingo.is_private = false
       this.editBingo.name = ''
       this.editBingo.description = ''
       this.editBingo.words = []

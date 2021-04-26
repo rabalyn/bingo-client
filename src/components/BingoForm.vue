@@ -1,7 +1,19 @@
 <template>
   <div class="card mx-3 my-3 column">
     <div class="card-content">
-      <p class="title">
+      <p>
+        <b-field>
+          <b-switch
+            v-model="newBingo.is_private"
+            :disabled="!user"
+            :value="newBingo.is_private"
+            type="is-info"
+            @input="saveBingo"
+          >
+            {{ newBingo.is_private ? 'Privat' : 'Öffentlich' }}
+          </b-switch>
+        </b-field>
+
         <b-field
           label="Bingotitel*"
           :type="bingoNameType"
@@ -101,6 +113,8 @@ export default {
       default: function () {
         return {
           id: null,
+          is_private: false,
+          owner: null,
           name: '',
           description: '',
           words: [],
@@ -115,6 +129,9 @@ export default {
     }
   },
   computed: {
+    user () {
+      return this.$store.state.auth.user
+    },
     bingoNameType () {
       if (this.newBingo.name && this.newBingo.name.length >= 2 && this.newBingo.name.length <= 255) return 'is-success'
       else if (this.newBingo.name) return 'is-danger'
@@ -147,6 +164,8 @@ export default {
       deep: true,
       handler () {
         this.newBingo.id = this.editBingo.id
+        this.newBingo.is_private = this.editBingo.is_private
+        this.newBingo.owner = this.editBingo.owner
         this.newBingo.name = this.editBingo.name
         this.newBingo.description = this.editBingo.description
         this.newBingo.words = this.editBingo.words
@@ -157,6 +176,8 @@ export default {
   methods: {
     addWord (word) {
       if (!word) return
+      if (word.name && word.name.length < 2) return
+
       if (this.newBingo.words.map(x => x.name).includes(word.name)) {
         return
       }
@@ -191,6 +212,8 @@ export default {
       this.newBingo = new this.$FeathersVuex.api.Bingos()
     },
     async saveBingo () {
+      if (!(this.bingoNameType === 'is-success' && this.bingoDescriptionType === 'is-success')) return
+
       const { Bingos, Words, Topics } = this.$FeathersVuex.api
       const existingWords = await Words.find({ query: { $limit: 5000 } })
       const existingTopics = await Topics.find({ query: { $limit: 5000 } })
@@ -219,11 +242,15 @@ export default {
 
       const bingo = new Bingos({
         id: this.newBingo.id,
+        is_private: this.newBingo.is_private,
+        owner: this.user,
         name: this.newBingo.name,
         description: this.newBingo.description,
         topics: this.newBingo.topics,
         words: this.newBingo.words
       })
+      delete bingo.owner.bingos
+      delete bingo.owner.rights
 
       try {
         await bingo.save()

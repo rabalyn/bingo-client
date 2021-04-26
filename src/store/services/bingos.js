@@ -12,6 +12,8 @@ class Bingos extends BaseModel {
   // Define default properties here
   static instanceDefaults () {
     return {
+      owner: null,
+      is_private: false,
       name: '',
       description: '',
       topics: [],

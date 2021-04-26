@@ -23,17 +23,13 @@
 
       <template #end>
         <b-navbar-item>
-          <b-tooltip
-            position="is-bottom"
-            multilined
-          >
-            <a v-if="user">
-              {{ user.name }}
-            </a>
-            <template v-slot:content>
-              <pre>{{ user }}</pre>
-            </template>
-          </b-tooltip>
+          <a v-if="user">
+            <b-icon
+              size="is-small"
+              icon="account"
+            />
+            {{ user.name }}
+          </a>
         </b-navbar-item>
         <b-navbar-item
           v-if="user"
