@@ -8,10 +8,15 @@
       v-if="bingo"
       class="content"
     >
-      <h1>{{ bingo.name }}</h1>
-      <h4>{{ bingo.description }}</h4>
-      <div class="columns">
-        <div class="column">
+      <h1 class="mx-5">
+        {{ bingo.name }}
+      </h1>
+      <h4 class="mx-5">
+        {{ bingo.description }}
+      </h4>
+
+      <b-navbar class="mx-5">
+        <template #start>
           <b-taglist>
             <b-tag
               v-for="topic in bingo.topics"
@@ -21,8 +26,8 @@
               {{ topic.name }}
             </b-tag>
           </b-taglist>
-        </div>
-        <div class="column">
+        </template>
+        <template #end>
           <b-button
             class="is-danger is-light mx-1"
             @click="resetClicks()"
@@ -35,11 +40,23 @@
           >
             Neu würfeln
           </b-button>
-          <b-button @click="$router.push('/')">
+          <b-button
+            class="mx-1"
+            @click="$router.push('/')"
+          >
             Zurück
           </b-button>
-        </div>
-      </div>
+
+          <b-field>
+            <b-switch
+              v-model="highlightRainbow"
+              class="mx-1 mt-1"
+            >
+              <b-icon icon="palette" />
+            </b-switch>
+          </b-field>
+        </template>
+      </b-navbar>
 
       <h1 v-if="hasWon">
         GEWONNEN!
@@ -47,16 +64,21 @@
       <div
         v-if="hasWords && myWords.length > 24"
         id="game"
-        class="columns is-flex is-flex-direction-row is-flex-wrap-wrap"
+        class="columns is-flex is-flex-direction-row is-flex-wrap-wrap my-1"
       >
         <div
           v-for="(word, idx) in myWords || getMyWords(bingo)"
           :key="word.id"
-          class="column is-one-fifth has-text-weight-bold is-size-5 is-flex is-justify-content-center is-align-items-center field"
-          :class="{'highlight': word.clicked}"
+          class="column is-one-fifth has-text-weight-bold is-size-5 is-flex is-justify-content-center is-align-items-center game-field"
+          :class="{
+            'highlight': word.clicked && highlightRainbow,
+            'highlight-static': word.clicked && !highlightRainbow
+          }"
           @click="toggleClicked(idx)"
         >
-          {{ word.name }}
+          <span :class="{'highlight-text': word.clicked && highlightRainbow}">
+            {{ word.name }}
+          </span>
         </div>
       </div>
       <div v-else>
@@ -71,6 +93,7 @@ export default {
   name: 'Bingo',
   data: function () {
     return {
+      highlightRainbow: false,
       myWords: []
     }
   },
@@ -189,15 +212,78 @@ export default {
 </script>
 
 <style scoped>
-.field {
+#game {
+  transform: scale(0.95);
+}
+
+.game-field {
   min-height: 14vh;
   max-height: 14vh;
-  border: solid 2px cyan;
+  border: solid 0.05em black;
   cursor: pointer;
   user-select: none;
+  text-align: center;
+}
+
+.highlight-static {
+  background-color: darkslategray;
+  color: whitesmoke;
+}
+
+.highlight-text {
+  background: linear-gradient(150deg, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3, #ff2400, #e81d1d, #e8b71d, #e3e81d);
+
+  background-size: 1200% 1200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  -webkit-text-stroke-width: 0.01em;
+  -webkit-text-stroke-color: black;
+
+  -webkit-animation: rainbowText 6s ease infinite;
+  -z-animation: rainbowText 6s ease infinite;
+  -o-animation: rainbowText 6s ease infinite;
+  animation: rainbowText 6s ease infinite;
 }
 
 .highlight {
-  background-color: yellow;
+  margin-bottom: 0;
+  background: linear-gradient(
+    120deg,
+    #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3
+  );
+  background-size: 1000% 1000%;
+
+  -webkit-animation: rainbow 13s linear infinite;
+  -z-animation: rainbow 13s linear infinite;
+  -o-animation: rainbow 13s linear infinite;
+  animation: rainbow 13s linear infinite;
+}
+
+@-webkit-keyframes rainbow {
+    0%{background-position:0% 82%}
+    50%{background-position:100% 19%}
+    100%{background-position:0% 82%}
+}
+@-moz-keyframes rainbow {
+    0%{background-position:0% 82%}
+    50%{background-position:100% 19%}
+    100%{background-position:0% 82%}
+}
+@-o-keyframes rainbow {
+    0%{background-position:0% 82%}
+    50%{background-position:100% 19%}
+    100%{background-position:0% 82%}
+}
+@keyframes rainbow {
+    0%{background-position:0% 82%}
+    50%{background-position:100% 19%}
+    100%{background-position:0% 82%}
+}
+
+@keyframes rainbowText {
+    0%{background-position:0% 0%}
+    50%{background-position:88% 88%}
+    100%{background-position:0% 0%}
 }
 </style>
