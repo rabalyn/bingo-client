@@ -249,8 +249,8 @@ export default {
         topics: this.newBingo.topics,
         words: this.newBingo.words
       })
-      delete bingo.owner.bingos
-      delete bingo.owner.rights
+      if (bingo?.owner?.bingos) delete bingo.owner.bingos
+      if (bingo?.owner?.rights) delete bingo.owner.rights
 
       try {
         await bingo.save()
