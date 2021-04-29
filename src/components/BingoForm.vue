@@ -14,6 +14,27 @@
           </b-switch>
         </b-field>
 
+        <b-upload
+          v-model="bingoImport"
+          class="file-label"
+          accept="application/json"
+          @input="importBingo"
+        >
+          <span class="file-cta">
+            <b-icon
+              class="file-icon"
+              icon="upload"
+            />
+            <span class="file-label">Bingo importieren</span>
+          </span>
+          <span
+            v-if="bingoImport"
+            class="file-name"
+          >
+            {{ bingoImport.name }}
+          </span>
+        </b-upload>
+
         <b-field
           label="Bingotitel*"
           :type="bingoNameType"
@@ -65,6 +86,33 @@
         </b-taglist>
 
         <h3>Kategorien</h3>
+        <b-button
+          class="my-2"
+          :disabled="newBingo.topics.length < 1"
+          @click="importTopicRelatedWords"
+        >
+          Lade Topic Wörter...
+        </b-button>
+        <div
+          v-if="topicWords.length > 0"
+          class="block"
+        >
+          <b-field
+            v-for="topicWord in topicWords"
+            :key="topicWord.id"
+          >
+            <b-checkbox
+              v-model="wordsToImportFromTopics"
+              :native-value="topicWord"
+            >
+              {{ topicWord.name }}
+            </b-checkbox>
+          </b-field>
+          <b-button @click="addWordsToImportFromTopics">
+            Füge ausgewählte Wörter hinzu
+          </b-button>
+        </div>
+
         <autocomplete
           column="name"
           placeholder="neue Kategorie..."
@@ -125,7 +173,10 @@ export default {
   },
   data: function () {
     return {
-      newBingo: new this.$FeathersVuex.api.Bingos()
+      newBingo: new this.$FeathersVuex.api.Bingos(),
+      bingoImport: null,
+      topicWords: [],
+      wordsToImportFromTopics: []
     }
   },
   computed: {
@@ -163,6 +214,9 @@ export default {
     editBingo: {
       deep: true,
       handler () {
+        this.topicWords = []
+        this.wordsToImportFromTopics = []
+
         this.newBingo.id = this.editBingo.id
         this.newBingo.is_private = this.editBingo.is_private
         this.newBingo.owner = this.editBingo.owner
@@ -174,7 +228,7 @@ export default {
     }
   },
   methods: {
-    addWord (word) {
+    async addWord (word) {
       if (!word) return
       if (word.name && word.name.length < 2) return
 
@@ -189,7 +243,7 @@ export default {
       this.newBingo.words.push(newWord)
 
       if (this.bingoNameType === 'is-success' && this.bingoDescriptionType === 'is-success') {
-        this.saveBingo()
+        await this.saveBingo()
       }
     },
     addTopic (topic) {
@@ -208,8 +262,111 @@ export default {
         this.saveBingo()
       }
     },
+    showImportBingoError (error) {
+      this.bingoImport = null
+      this.$buefy.toast.open({
+        message: `Bingo konnte nicht geladen werden: ${error}`,
+        type: 'is-danger'
+      })
+    },
+    importBingo () {
+      const reader = new FileReader()
+      reader.addEventListener('load', (event) => {
+        try {
+          const loadedBingo = JSON.parse(event.target.result)
+
+          if (!loadedBingo.name) return this.showImportBingoError('Falsches Dateiformat.')
+          if (typeof loadedBingo.name !== 'string') return this.showImportBingoError('Falsches Dateiformat.')
+          if (!loadedBingo.description) return this.showImportBingoError('Falsches Dateiformat.')
+          if (typeof loadedBingo.description !== 'string') return this.showImportBingoError('Falsches Dateiformat.')
+          if (!loadedBingo.words) return this.showImportBingoError('Falsches Dateiformat.')
+          if (typeof loadedBingo.words !== 'object') return this.showImportBingoError('Falsches Dateiformat.')
+          if (!loadedBingo.topics) return this.showImportBingoError('Falsches Dateiformat.')
+          if (typeof loadedBingo.topics !== 'object') return this.showImportBingoError('Falsches Dateiformat.')
+
+          const loadedBingoKeys = Object.keys(loadedBingo)
+          const validBingoKeys = ['name', 'description', 'words', 'topics']
+          for (let i = 0; i < loadedBingoKeys.length; i++) {
+            if (!validBingoKeys.includes(loadedBingoKeys[i])) {
+              return this.showImportBingoError('Falsches Dateiformat.')
+            }
+          }
+
+          for (let i = 0; i < loadedBingo.words.length; i++) {
+            const word = loadedBingo.words[i]
+            if (!word.name) return this.showImportBingoError('Falsches Dateiformat.')
+            if (!word.id) return this.showImportBingoError('Falsches Dateiformat.')
+            const wordKeys = Object.keys(word)
+            const validWordKeys = ['name', 'id']
+            for (let j = 0; j < wordKeys.length; j++) {
+              if (!validWordKeys.includes(wordKeys[j])) {
+                return this.showImportBingoError('Falsches Dateiformat.')
+              }
+            }
+          }
+
+          for (let i = 0; i < loadedBingo.topics.length; i++) {
+            const topic = loadedBingo.topics[i]
+            if (!topic.name) return this.showImportBingoError('Falsches Dateiformat.')
+            if (!topic.id) return this.showImportBingoError('Falsches Dateiformat.')
+            const topicKeys = Object.keys(topic)
+            const validTopicKeys = ['name', 'id']
+            for (let j = 0; j < topicKeys.length; j++) {
+              if (!validTopicKeys.includes(topicKeys[j])) {
+                return this.showImportBingoError('Falsches Dateiformat.')
+              }
+            }
+          }
+
+          this.topicWords = []
+          this.wordsToImportFromTopics = []
+
+          this.newBingo.is_private = false
+          this.newBingo.owner = null
+          this.newBingo.name = `${loadedBingo.name} - import`
+          this.newBingo.description = loadedBingo.description
+          this.newBingo.words = loadedBingo.words
+          this.newBingo.topics = loadedBingo.topics
+        } catch (error) {
+          console.error('could not parse')
+        }
+
+        this.bingoImport = null
+      })
+      reader.readAsText(this.bingoImport)
+    },
+    async importTopicRelatedWords () {
+      for (let i = 0; i < this.newBingo.topics.length; i++) {
+        if (!this.newBingo.topics[i].words) {
+          const { Topics } = this.$FeathersVuex.api
+          const loadedTopic = await Topics.get(this.newBingo.topics[i].id)
+          if (loadedTopic.words) {
+            this.newBingo.topics[i] = loadedTopic
+          }
+        }
+
+        const topicWords = this.newBingo.topics[i].words
+        const tmpWords = new Set()
+        for (let j = 0; j < topicWords.length; j++) {
+          tmpWords.add(topicWords[j])
+        }
+
+        this.topicWords = [...tmpWords]
+        this.wordsToImportFromTopics = this.topicWords
+      }
+    },
+    async addWordsToImportFromTopics () {
+      for (let i = 0; i < this.wordsToImportFromTopics.length; i++) {
+        await this.addWord(this.wordsToImportFromTopics[i])
+      }
+
+      this.topicWords = []
+      this.wordsToImportFromTopics = []
+    },
     resetNewBingo () {
       this.newBingo = new this.$FeathersVuex.api.Bingos()
+      this.topicWords = []
+      this.wordsToImportFromTopics = []
     },
     async saveBingo () {
       if (!(this.bingoNameType === 'is-success' && this.bingoDescriptionType === 'is-success')) return
@@ -219,8 +376,9 @@ export default {
       const existingTopics = await Topics.find({ query: { $limit: 5000 } })
 
       for (let i = 0; i < this.newBingo.words.length; i++) {
-        delete this.newBingo.words[i].__id
-        delete this.newBingo.words[i].__isTemp
+        if (this.newBingo.words[i].__id) delete this.newBingo.words[i].__id
+        if (this.newBingo.words[i].__isTemp) delete this.newBingo.words[i].__isTemp
+
         for (let j = 0; j < existingWords.total; j++) {
           const existingWord = existingWords.data[j]
           if (this.newBingo.words[i].name === existingWord.name) {
@@ -230,14 +388,23 @@ export default {
       }
 
       for (let i = 0; i < this.newBingo.topics.length; i++) {
-        delete this.newBingo.topics[i].__id
-        delete this.newBingo.topics[i].__isTemp
+        if (this.newBingo.topics[i].__id) delete this.newBingo.topics[i].__id
+        if (this.newBingo.topics[i].__isTemp) delete this.newBingo.topics[i].__isTemp
+
         for (let j = 0; j < existingTopics.total; j++) {
           const existingTopic = existingTopics.data[j]
           if (this.newBingo.topics[i].name === existingTopic.name) {
             this.newBingo.topics[i].id = existingTopic.id
           }
         }
+      }
+
+      for (let i = 0; i < this.newBingo.topics.length; i++) {
+        await new Topics({
+          id: this.newBingo.topics[i].id,
+          words: this.newBingo.words
+        }).save()
+        if (this.newBingo.topics[i].words) delete this.newBingo.topics[i].words
       }
 
       const bingo = new Bingos({

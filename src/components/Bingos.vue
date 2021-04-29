@@ -94,6 +94,14 @@
         >
           Lösche Bingo
         </b-button>
+        <b-button
+          v-if="bingo.is_private === false || (user && user.id === bingo.user_id)"
+          class="mx-1 my-2"
+          type="is-info is-light"
+          @click="exportBingo(bingo)"
+        >
+          Export
+        </b-button>
       </div>
     </div>
 
@@ -202,6 +210,25 @@ export default {
       this.editBingo.topics = []
       await bingo.remove()
       this.refresh()
+    },
+    exportBingo (bingo) {
+      bingo.words = bingo.words.map(x => ({ id: x.id, name: x.name }))
+      bingo.topics = bingo.topics.map(x => ({ id: x.id, name: x.name }))
+
+      const data = JSON.stringify({
+        name: bingo.name,
+        description: bingo.description,
+        words: bingo.words,
+        topics: bingo.topics
+      })
+      const blob = new Blob([data], { type: 'text/plain' })
+      const e = document.createEvent('MouseEvents')
+      const a = document.createElement('a')
+      a.download = `bingo_${bingo.name}.json`
+      a.href = window.URL.createObjectURL(blob)
+      a.dataset.downloadurl = ['text/json', a.download, a.href].join(':')
+      e.initEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+      a.dispatchEvent(e)
     }
   }
 }
