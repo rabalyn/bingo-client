@@ -76,7 +76,7 @@
         <b-taglist class="mt-2">
           <b-tag
             v-for="(word, idx) in newBingo.words"
-            :key="word.id"
+            :key="`${word.id}_${new Date().toISOString()}_${idx}`"
             type="is-info is-light"
             closable
             @close="newBingo.words.splice(idx, 1)"
@@ -98,8 +98,8 @@
           class="block"
         >
           <b-field
-            v-for="topicWord in topicWords"
-            :key="topicWord.id"
+            v-for="(topicWord, idx) in topicWords"
+            :key="`${topicWord.id}_${new Date().toISOString()}_${idx}`"
           >
             <b-checkbox
               v-model="wordsToImportFromTopics"
@@ -124,7 +124,7 @@
         <b-taglist class="mt-2">
           <b-tag
             v-for="(topic, idx) in newBingo.topics"
-            :key="topic.id"
+            :key="`${topic.id}_${new Date().toISOString()}_${idx}`"
             type="is-info is-light"
             closable
             @close="newBingo.topics.splice(idx, 1)"
@@ -271,7 +271,7 @@ export default {
     },
     importBingo () {
       const reader = new FileReader()
-      reader.addEventListener('load', (event) => {
+      reader.addEventListener('load', async (event) => {
         try {
           const loadedBingo = JSON.parse(event.target.result)
 
@@ -295,9 +295,8 @@ export default {
           for (let i = 0; i < loadedBingo.words.length; i++) {
             const word = loadedBingo.words[i]
             if (!word.name) return this.showImportBingoError('Falsches Dateiformat.')
-            if (!word.id) return this.showImportBingoError('Falsches Dateiformat.')
             const wordKeys = Object.keys(word)
-            const validWordKeys = ['name', 'id']
+            const validWordKeys = ['name']
             for (let j = 0; j < wordKeys.length; j++) {
               if (!validWordKeys.includes(wordKeys[j])) {
                 return this.showImportBingoError('Falsches Dateiformat.')
@@ -308,13 +307,40 @@ export default {
           for (let i = 0; i < loadedBingo.topics.length; i++) {
             const topic = loadedBingo.topics[i]
             if (!topic.name) return this.showImportBingoError('Falsches Dateiformat.')
-            if (!topic.id) return this.showImportBingoError('Falsches Dateiformat.')
             const topicKeys = Object.keys(topic)
-            const validTopicKeys = ['name', 'id']
+            const validTopicKeys = ['name']
             for (let j = 0; j < topicKeys.length; j++) {
               if (!validTopicKeys.includes(topicKeys[j])) {
                 return this.showImportBingoError('Falsches Dateiformat.')
               }
+            }
+          }
+
+          const { Words, Topics } = this.$FeathersVuex.api
+          for (let i = 0; i < loadedBingo.words.length; i++) {
+            try {
+              const searchedWord = await Words.find({ query: { name: loadedBingo.words[i].name } })
+              loadedBingo.words[i].id = searchedWord.data[0].id
+            } catch (error) {
+              console.error('words', error)
+              console.error('words - create ', loadedBingo.words[i].name)
+              const newWord = await new Words({
+                name: loadedBingo.words[i].name
+              }).save()
+              loadedBingo.words[i].id = newWord.id
+            }
+          }
+
+          for (let i = 0; i < loadedBingo.topics.length; i++) {
+            try {
+              const searchedTopic = loadedBingo.topics[i].id = await Topics.find({ query: { name: loadedBingo.topics[i].name } })
+              loadedBingo.topics[i].id = searchedTopic.data[0].id
+            } catch (error) {
+              console.error('topics', error)
+              const newTopic = await new Topics({
+                name: loadedBingo.topics[i].name
+              }).save()
+              loadedBingo.topics[i].id = newTopic.id
             }
           }
 
@@ -339,7 +365,15 @@ export default {
       for (let i = 0; i < this.newBingo.topics.length; i++) {
         if (!this.newBingo.topics[i].words) {
           const { Topics } = this.$FeathersVuex.api
-          const loadedTopic = await Topics.get(this.newBingo.topics[i].id)
+          let loadedTopic
+          try {
+            loadedTopic = await Topics.get(this.newBingo.topics[i].id)
+          } catch (error) {
+            loadedTopic = await new Topics({
+              name: this.newBingo.topics[i].name
+            }).save()
+          }
+          loadedTopic = await Topics.get(loadedTopic.id)
           if (loadedTopic.words) {
             this.newBingo.topics[i] = loadedTopic
           }

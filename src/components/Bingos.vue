@@ -212,8 +212,8 @@ export default {
       this.refresh()
     },
     exportBingo (bingo) {
-      bingo.words = bingo.words.map(x => ({ id: x.id, name: x.name }))
-      bingo.topics = bingo.topics.map(x => ({ id: x.id, name: x.name }))
+      bingo.words = bingo.words.map(x => ({ name: x.name }))
+      bingo.topics = bingo.topics.map(x => ({ name: x.name }))
 
       const data = JSON.stringify({
         name: bingo.name,

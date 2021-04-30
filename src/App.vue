@@ -99,6 +99,7 @@
                         maxlength="255"
                         required
                         password-reveal
+                        @keyup.native.enter="login"
                       />
                     </b-field>
                   </section>
@@ -185,6 +186,7 @@ export default {
       this.login()
     },
     async login () {
+      if (!(this.isUsernameValid && this.isPasswordValid)) return
       try {
         await this.$store.dispatch('auth/authenticate', {
           strategy: 'local',
@@ -193,7 +195,10 @@ export default {
         })
 
         this.$refs.loginDropdown.toggle()
+        this.username = ''
+        this.password = ''
       } catch (error) {
+        this.password = ''
         this.$buefy.toast.open({
           duration: 5000,
           message: 'Benutzername oder Passwort falsch.',
