@@ -1,5 +1,7 @@
 <template>
   <div class="card mx-3 my-3 column">
+    <b-loading :active="isLoading" />
+
     <div class="card-content">
       <p>
         <b-field>
@@ -173,6 +175,7 @@ export default {
   },
   data: function () {
     return {
+      isLoading: false,
       newBingo: new this.$FeathersVuex.api.Bingos(),
       bingoImport: null,
       topicWords: [],
@@ -246,7 +249,7 @@ export default {
         await this.saveBingo()
       }
     },
-    addTopic (topic) {
+    async addTopic (topic) {
       if (!topic) return
       if (this.newBingo.topics.map(x => x.name).includes(topic.name)) {
         return
@@ -256,6 +259,15 @@ export default {
         id: topic.id,
         name: topic.name
       })
+      try {
+        this.isLoading = true
+        await newTopic.save()
+      } catch (error) {
+        console.error(error)
+      } finally {
+        this.isLoading = false
+      }
+
       this.newBingo.topics.push(newTopic)
 
       if (this.bingoNameType === 'is-success' && this.bingoDescriptionType === 'is-success') {
@@ -270,6 +282,7 @@ export default {
       })
     },
     importBingo () {
+      this.isLoading = true
       const reader = new FileReader()
       reader.addEventListener('load', async (event) => {
         try {
@@ -322,8 +335,7 @@ export default {
               const searchedWord = await Words.find({ query: { name: loadedBingo.words[i].name } })
               loadedBingo.words[i].id = searchedWord.data[0].id
             } catch (error) {
-              console.error('words', error)
-              console.error('words - create ', loadedBingo.words[i].name)
+              console.info('words - create ', loadedBingo.words[i].name)
               const newWord = await new Words({
                 name: loadedBingo.words[i].name
               }).save()
@@ -358,10 +370,13 @@ export default {
         }
 
         this.bingoImport = null
+        this.isLoading = false
       })
       reader.readAsText(this.bingoImport)
     },
     async importTopicRelatedWords () {
+      this.isLoading = true
+
       for (let i = 0; i < this.newBingo.topics.length; i++) {
         if (!this.newBingo.topics[i].words) {
           const { Topics } = this.$FeathersVuex.api
@@ -388,14 +403,18 @@ export default {
         this.topicWords = [...tmpWords]
         this.wordsToImportFromTopics = this.topicWords
       }
+
+      this.isLoading = false
     },
     async addWordsToImportFromTopics () {
+      this.isLoading = true
       for (let i = 0; i < this.wordsToImportFromTopics.length; i++) {
         await this.addWord(this.wordsToImportFromTopics[i])
       }
 
       this.topicWords = []
       this.wordsToImportFromTopics = []
+      this.isLoading = false
     },
     resetNewBingo () {
       this.newBingo = new this.$FeathersVuex.api.Bingos()
@@ -405,6 +424,7 @@ export default {
     async saveBingo () {
       if (!(this.bingoNameType === 'is-success' && this.bingoDescriptionType === 'is-success')) return
 
+      this.isLoading = true
       const { Bingos, Words, Topics } = this.$FeathersVuex.api
       const existingWords = await Words.find({ query: { $limit: 5000 } })
       const existingTopics = await Topics.find({ query: { $limit: 5000 } })
@@ -434,11 +454,16 @@ export default {
       }
 
       for (let i = 0; i < this.newBingo.topics.length; i++) {
-        await new Topics({
-          id: this.newBingo.topics[i].id,
-          words: this.newBingo.words
-        }).save()
-        if (this.newBingo.topics[i].words) delete this.newBingo.topics[i].words
+        try {
+          await new Topics({
+            id: this.newBingo.topics[i].id,
+            name: this.newBingo.topics[i].name,
+            words: this.newBingo.words
+          }).save()
+          this.newBingo.topics = this.newBingo.topics.map(x => ({ id: x.id, name: x.name }))
+        } catch (error) {
+          console.error(error)
+        }
       }
 
       const bingo = new Bingos({
@@ -458,11 +483,18 @@ export default {
         this.showSaveSuccessfulToast()
       } catch (error) {
         this.showSaveFailedToast(error)
+        throw new Error(error)
+      } finally {
+        this.isLoading = false
       }
     },
     async saveAndResetBingo () {
-      await this.saveBingo()
-      this.resetNewBingo()
+      try {
+        await this.saveBingo()
+        this.resetNewBingo()
+      } catch (error) {
+        console.error(error)
+      }
     },
     showSaveSuccessfulToast () {
       this.$buefy.toast.open({
