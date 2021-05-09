@@ -422,6 +422,7 @@ export default {
       this.wordsToImportFromTopics = []
     },
     async saveBingo () {
+      const isPrivate = this.newBingo.is_private
       if (!(this.bingoNameType === 'is-success' && this.bingoDescriptionType === 'is-success')) return
 
       this.isLoading = true
@@ -466,6 +467,7 @@ export default {
         }
       }
 
+      this.newBingo.is_private = isPrivate
       const bingo = new Bingos({
         id: this.newBingo.id,
         is_private: this.newBingo.is_private,
