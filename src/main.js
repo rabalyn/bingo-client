@@ -2,7 +2,8 @@ import Vue from 'vue'
 import VueCompositionApi from '@vue/composition-api'
 
 import Buefy from 'buefy'
-import 'buefy/dist/buefy.css'
+// import 'buefy/dist/buefy.css'
+import './sass/bingoBuefy.scss'
 import '@mdi/font/css/materialdesignicons.css'
 
 import App from './App.vue'

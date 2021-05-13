@@ -15,7 +15,10 @@
         {{ bingo.description }}
       </h4>
 
-      <b-navbar class="mx-5">
+      <b-navbar
+        class="mx-5"
+        style="z-index: 1;"
+      >
         <template #start>
           <b-taglist>
             <b-tag

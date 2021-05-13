@@ -6,9 +6,19 @@
     watch="query"
   >
     <b-tooltip
-      :label="getConnectedUsers(connectedUsers)"
-      position="is-left"
+      position="is-bottom"
     >
+      <template v-slot:content>
+        <ul>
+          <li>{{ connectedUsers.filter(x => x.type === 'anonymous').length }} Gäste</li>
+          <li
+            v-for="authedUser in connectedUsers.filter(x => x.type === 'authenticated')"
+            :key="authedUser.id"
+          >
+            {{ authedUser.name }}
+          </li>
+        </ul>
+      </template>
       <b-tag
         rounded
         size="is-medium"
