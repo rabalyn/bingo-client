@@ -13,6 +13,22 @@
           Home
         </b-navbar-item>
         <b-navbar-item
+          v-if="userIsAdmin"
+          tag="router-link"
+          to="/tpcs"
+          :active="currentRouteName === 'Topics'"
+        >
+          Kategorien
+        </b-navbar-item>
+        <b-navbar-item
+          v-if="userIsAdmin"
+          tag="router-link"
+          to="/wrds"
+          :active="currentRouteName === 'Words'"
+        >
+          Worte
+        </b-navbar-item>
+        <b-navbar-item
           tag="router-link"
           to="/about"
           :active="currentRouteName === 'About'"
@@ -123,6 +139,10 @@
             </b-dropdown-item>
           </b-dropdown>
         </b-navbar-item>
+
+        <b-navbar-item>
+          <connected-users />
+        </b-navbar-item>
       </template>
     </b-navbar>
 
@@ -131,7 +151,12 @@
 </template>
 
 <script>
+import ConnectedUsers from './components/ConnectedUsers.vue'
+
 export default {
+  components: {
+    ConnectedUsers
+  },
   data: function () {
     return {
       username: '',
@@ -144,6 +169,10 @@ export default {
     },
     user () {
       return this.$store.state.auth.user
+    },
+    userIsAdmin () {
+      if (!this.user) return false
+      return this.user.rights.map(x => x.name).includes('isAdmin')
     },
     displayName () {
       if (this.user?.name) {

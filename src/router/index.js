@@ -17,6 +17,16 @@ const routes = [
     component: Bingo
   },
   {
+    path: '/tpcs',
+    name: 'Topics',
+    component: () => import(/* webpackChunkName: "topics" */ '../views/Topics.vue')
+  },
+  {
+    path: '/wrds',
+    name: 'Words',
+    component: () => import(/* webpackChunkName: "words" */ '../views/Words.vue')
+  },
+  {
     path: '/about',
     name: 'About',
     // route level code-splitting
