@@ -1,3 +1,6 @@
 module.exports = {
-  transpileDependencies: ['feathers-vuex']
+  transpileDependencies: ['feathers-vuex'],
+  devServer: {
+    port: 8081
+  }
 }
