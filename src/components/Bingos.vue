@@ -106,6 +106,7 @@
     </div>
 
     <bingos-pagination
+      dropdowns-position="is-top-right"
       :current.sync="current"
       :limit.sync="limit"
       :total.sync="total"

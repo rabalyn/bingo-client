@@ -29,6 +29,14 @@
           Worte
         </b-navbar-item>
         <b-navbar-item
+          v-if="userIsAdmin"
+          tag="router-link"
+          to="/opts"
+          :active="currentRouteName === 'Options'"
+        >
+          Optionen
+        </b-navbar-item>
+        <b-navbar-item
           tag="router-link"
           to="/about"
           :active="currentRouteName === 'About'"
@@ -59,85 +67,11 @@
           </b-button>
         </b-navbar-item>
 
-        <b-navbar-item tag="div">
-          <b-dropdown
-            ref="loginDropdown"
-            position="is-bottom-left"
-            append-to-body
-            aria-role="menu"
-            trap-focus
-          >
-            <template #trigger>
-              <a
-                class="navbar-item"
-                role="button"
-              >
-                <span>Login</span>
-                <b-icon icon="menu-down" />
-              </a>
-            </template>
-
-            <b-dropdown-item
-              aria-role="menu-item"
-              :focusable="false"
-              custom
-              paddingless
-            >
-              <form action="">
-                <div
-                  class="modal-card"
-                  style="width:300px;"
-                >
-                  <section class="modal-card-body">
-                    <b-field
-                      label="Benutzername"
-                      :type="isUsernameValid ? 'is-success' : 'is-danger'"
-                    >
-                      <b-input
-                        v-model="username"
-                        type="text"
-                        placeholder="Benutzername..."
-                        minlength="2"
-                        maxlength="255"
-                        required
-                      />
-                    </b-field>
-
-                    <b-field
-                      label="Passwort"
-                      :type="isPasswordValid ? 'is-success' : 'is-danger'"
-                    >
-                      <b-input
-                        v-model="password"
-                        type="password"
-                        placeholder="Passwort..."
-                        minlength="12"
-                        maxlength="255"
-                        required
-                        password-reveal
-                        @keyup.native.enter="login"
-                      />
-                    </b-field>
-                  </section>
-                  <footer class="modal-card-foot">
-                    <b-button
-                      label="Registrieren"
-                      type="is-info is-light"
-                      :disabled="!(isUsernameValid && isPasswordValid)"
-                      @click="register"
-                    />
-
-                    <b-button
-                      label="Login"
-                      type="is-success is-light"
-                      :disabled="!(isUsernameValid && isPasswordValid)"
-                      @click="login"
-                    />
-                  </footer>
-                </div>
-              </form>
-            </b-dropdown-item>
-          </b-dropdown>
+        <b-navbar-item
+          v-if="!displayName"
+          tag="div"
+        >
+          <login-form />
         </b-navbar-item>
 
         <b-navbar-item>
@@ -152,16 +86,12 @@
 
 <script>
 import ConnectedUsers from './components/ConnectedUsers.vue'
+import LoginForm from './components/LoginForm.vue'
 
 export default {
   components: {
-    ConnectedUsers
-  },
-  data: function () {
-    return {
-      username: '',
-      password: ''
-    }
+    ConnectedUsers,
+    LoginForm
   },
   computed: {
     currentRouteName () {
@@ -180,14 +110,6 @@ export default {
       }
 
       return ''
-    },
-    isUsernameValid () {
-      if (this.username.length >= 2 && this.username.length <= 255) return true
-      return false
-    },
-    isPasswordValid () {
-      if (this.password.length >= 12 && this.password.length <= 255) return true
-      return false
     }
   },
   mounted () {
@@ -198,48 +120,13 @@ export default {
     })
   },
   methods: {
-    async register () {
-      try {
-        await this.$store.dispatch('users/create', {
-          name: this.username,
-          password: this.password
-        })
-      } catch (error) {
-        this.$buefy.toast.open({
-          duration: 5000,
-          message: 'Benutzername ist bereits vergeben.',
-          type: 'is-danger'
-        })
-      }
-
-      this.login()
-    },
-    async login () {
-      if (!(this.isUsernameValid && this.isPasswordValid)) return
-      try {
-        await this.$store.dispatch('auth/authenticate', {
-          strategy: 'local',
-          name: this.username,
-          password: this.password
-        })
-
-        this.$refs.loginDropdown.toggle()
-        this.username = ''
-        this.password = ''
-      } catch (error) {
-        this.password = ''
-        this.$buefy.toast.open({
-          duration: 5000,
-          message: 'Benutzername oder Passwort falsch.',
-          type: 'is-danger'
-        })
-      }
-    },
     logout () {
       this.$store.dispatch('auth/logout')
+        .then(() => {
+          if (this.$route.path !== '/') { this.$router.push('/') }
+        })
     }
   }
-
 }
 </script>
 

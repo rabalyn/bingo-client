@@ -3,6 +3,8 @@ import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import Bingo from '../views/Bingo.vue'
 
+import store from '../store'
+
 Vue.use(VueRouter)
 
 const routes = [
@@ -27,6 +29,11 @@ const routes = [
     component: () => import(/* webpackChunkName: "words" */ '../views/Words.vue')
   },
   {
+    path: '/opts',
+    name: 'Options',
+    component: () => import(/* webpackChunkName: "options" */ '../views/Options.vue')
+  },
+  {
     path: '/about',
     name: 'About',
     // route level code-splitting
@@ -38,6 +45,29 @@ const routes = [
 
 const router = new VueRouter({
   routes
+})
+
+router.beforeEach(async (to, from, next) => {
+  const adminRoutes = ['Topics', 'Words', 'Options']
+  try {
+    await store.dispatch('auth/authenticate')
+  } catch (error) {
+    console.log('anon user')
+  }
+
+  if (adminRoutes.includes(to.name)) {
+    if (!store.state?.auth?.user) {
+      return next(false)
+    }
+    const userPermissions = store.state.auth.user.rights.map(x => x.name)
+    if (userPermissions.includes('isAdmin')) {
+      return next()
+    } else {
+      return next(false)
+    }
+  }
+
+  next()
 })
 
 export default router

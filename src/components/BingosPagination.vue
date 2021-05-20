@@ -4,6 +4,7 @@
     <div class="column is-3">
       <b-dropdown
         v-model="innerLimit"
+        :position="dropdownsPosition"
         @change="$emit('update:limit', $event)"
       >
         <template #trigger>
@@ -22,6 +23,7 @@
 
       <b-dropdown
         v-model="innerOrder"
+        :position="dropdownsPosition"
         @change="$emit('update:order', $event)"
       >
         <template #trigger>
@@ -55,6 +57,10 @@
 export default {
   name: 'BingosPagination',
   props: {
+    dropdownsPosition: {
+      type: String,
+      default: 'is-bottom-right'
+    },
     current: {
       type: Number,
       default: 1

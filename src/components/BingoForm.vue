@@ -66,7 +66,7 @@
       </p>
 
       <div class="content">
-        <h3>Bingowörter</h3>
+        <h3>Bingowörter ({{ newBingo.words.length }})</h3>
         <autocomplete
           column="name"
           placeholder="neues Bingowort..."
@@ -81,7 +81,7 @@
             :key="`${word.id}_${new Date().toISOString()}_${idx}`"
             type="is-info is-light"
             closable
-            @close="newBingo.words.splice(idx, 1)"
+            @close="removeWord(idx)"
           >
             {{ word.name }}
           </b-tag>
@@ -176,6 +176,7 @@ export default {
   data: function () {
     return {
       isLoading: false,
+      isBingoSaving: false,
       newBingo: new this.$FeathersVuex.api.Bingos(),
       bingoImport: null,
       topicWords: [],
@@ -231,7 +232,7 @@ export default {
     }
   },
   methods: {
-    async addWord (word) {
+    async addWord (word, isBulkImport = false) {
       if (!word) return
       if (word.name && word.name.length < 2) return
 
@@ -245,6 +246,12 @@ export default {
       })
       this.newBingo.words.push(newWord)
 
+      if (this.bingoNameType === 'is-success' && this.bingoDescriptionType === 'is-success') {
+        if (isBulkImport === false) await this.saveBingo()
+      }
+    },
+    async removeWord (idx) {
+      this.newBingo.words.splice(idx, 1)
       if (this.bingoNameType === 'is-success' && this.bingoDescriptionType === 'is-success') {
         await this.saveBingo()
       }
@@ -404,27 +411,31 @@ export default {
         this.wordsToImportFromTopics = this.topicWords
       }
 
+      await this.saveBingo({ force: true })
       this.isLoading = false
     },
     async addWordsToImportFromTopics () {
       this.isLoading = true
       for (let i = 0; i < this.wordsToImportFromTopics.length; i++) {
-        await this.addWord(this.wordsToImportFromTopics[i])
+        await this.addWord(this.wordsToImportFromTopics[i], true)
       }
 
       this.topicWords = []
       this.wordsToImportFromTopics = []
       this.isLoading = false
+      await this.saveBingo({ force: true })
     },
     resetNewBingo () {
       this.newBingo = new this.$FeathersVuex.api.Bingos()
       this.topicWords = []
       this.wordsToImportFromTopics = []
     },
-    async saveBingo () {
+    async saveBingo (opts = { force: false }) {
       if (!(this.bingoNameType === 'is-success' && this.bingoDescriptionType === 'is-success')) return
 
-      this.isLoading = true
+      if (this.isBingoSaving === true && opts.force === false) return
+
+      this.isBingoSaving = true
       const { Bingos, Words, Topics } = this.$FeathersVuex.api
       const existingWords = await Words.find({ query: { $limit: 5000 } })
       const existingTopics = await Topics.find({ query: { $limit: 5000 } })
@@ -432,6 +443,7 @@ export default {
       for (let i = 0; i < this.newBingo.words.length; i++) {
         if (this.newBingo.words[i].__id) delete this.newBingo.words[i].__id
         if (this.newBingo.words[i].__isTemp) delete this.newBingo.words[i].__isTemp
+        if (this.newBingo.words[i].topics) delete this.newBingo.words[i].topics
 
         for (let j = 0; j < existingWords.total; j++) {
           const existingWord = existingWords.data[j]
@@ -444,6 +456,7 @@ export default {
       for (let i = 0; i < this.newBingo.topics.length; i++) {
         if (this.newBingo.topics[i].__id) delete this.newBingo.topics[i].__id
         if (this.newBingo.topics[i].__isTemp) delete this.newBingo.topics[i].__isTemp
+        if (this.newBingo.topics[i].words) delete this.newBingo.topics[i].words
 
         for (let j = 0; j < existingTopics.total; j++) {
           const existingTopic = existingTopics.data[j]
@@ -479,13 +492,14 @@ export default {
       if (bingo?.owner?.rights) delete bingo.owner.rights
 
       try {
-        await bingo.save()
+        const savedBingo = await bingo.save()
+        this.newBingo.id = savedBingo.id
         this.showSaveSuccessfulToast()
       } catch (error) {
         this.showSaveFailedToast(error)
         throw new Error(error)
       } finally {
-        this.isLoading = false
+        this.isBingoSaving = false
       }
     },
     async saveAndResetBingo () {

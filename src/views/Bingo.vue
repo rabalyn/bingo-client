@@ -72,7 +72,7 @@
         <div
           v-for="(word, idx) in myWords || getMyWords(bingo)"
           :key="word.id"
-          class="column is-one-fifth has-text-weight-bold is-size-5 is-flex is-justify-content-center is-align-items-center game-field"
+          class="column is-one-fifth has-text-weight-bold is-flex is-justify-content-center is-align-items-center game-field"
           :class="{
             'highlight': word.clicked && highlightRainbow,
             'highlight-static': word.clicked && !highlightRainbow
@@ -217,6 +217,7 @@ export default {
 <style scoped>
 #game {
   transform: scale(0.95);
+  font-size: 3vh;
 }
 
 .game-field {

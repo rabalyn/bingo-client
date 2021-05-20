@@ -7,12 +7,17 @@
     </header>
     <div class="card-content">
       <div class="content">
-        <ul v-if="topic.words">
-          <li
-            v-for="word in sortedTopicWords"
-            :key="word.id"
-          >
-            {{ word.name }}
+        <ul>
+          <li>
+            Begriffe
+            <ul v-if="topic.words">
+              <li
+                v-for="word in sortedTopicWords"
+                :key="word.id"
+              >
+                {{ word.name }}
+              </li>
+            </ul>
           </li>
         </ul>
       </div>
