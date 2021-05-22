@@ -1,10 +1,16 @@
 <template>
   <div class="container">
-    <b>Spielstand: <b-button
-      size="is-small"
-      @click="clearLog"
-    >Log Löschen</b-button></b>
-    <ul>
+    <div class="columns">
+      <b-button
+        size="is-small"
+        type="is-primary is-light"
+        @click="clearLog"
+      >
+        Log Löschen
+      </b-button>
+    </div>
+    <b>Spielstand:</b>
+    <ul class="gamescore">
       <li
         v-for="(score, idx) in highscoreList"
         :key="idx"
@@ -14,55 +20,22 @@
           position="is-bottom"
           multilined
         >
-          <template v-slot:content>
-            <div class="columns m-0">
+          <template
+            v-slot:content
+          >
+            <p>{{ score.name }}</p>
+            <div
+              v-for="(offset) in [0, 5, 10, 15, 20]"
+              :key="`offset_${offset}`"
+              class="columns m-0 gamescore-preview"
+            >
               <div
                 v-for="index in [0, 1, 2, 3, 4]"
                 :key="`index_${index}`"
-                class="column is-1 m-0 p-0"
+                class="column m-0 p-0"
+                style="width: 13%; flex: none;"
               >
-                <span v-if="score.activeIdx.includes(index)">🟩</span>
-                <span v-else>🟥</span>
-              </div>
-            </div>
-            <div class="columns m-0">
-              <div
-                v-for="index in [5, 6, 7, 8, 9]"
-                :key="`index_${index}`"
-                class="column is-1 m-0 p-0"
-              >
-                <span v-if="score.activeIdx.includes(index)">🟩</span>
-                <span v-else>🟥</span>
-              </div>
-            </div>
-            <div class="columns m-0">
-              <div
-                v-for="index in [10, 11, 12, 13, 14]"
-                :key="`index_${index}`"
-                class="column is-1 m-0 p-0"
-              >
-                <span v-if="index === 12">🍀</span>
-                <span v-else-if="score.activeIdx.includes(index)">🟩</span>
-                <span v-else>🟥</span>
-              </div>
-            </div>
-            <div class="columns m-0">
-              <div
-                v-for="index in [15, 16, 17, 18, 19]"
-                :key="`index_${index}`"
-                class="column is-1 m-0 p-0"
-              >
-                <span v-if="score.activeIdx.includes(index)">🟩</span>
-                <span v-else>🟥</span>
-              </div>
-            </div>
-            <div class="columns m-0">
-              <div
-                v-for="index in [20, 21, 22, 23, 24]"
-                :key="`index_${index}`"
-                class="column is-1 m-0 p-0"
-              >
-                <span v-if="score.activeIdx.includes(index)">🟩</span>
+                <span v-if="score.activeIdx.includes(index + offset)">🟩</span>
                 <span v-else>🟥</span>
               </div>
             </div>
@@ -76,7 +49,7 @@
     <hr>
 
     <b>Logbuch ({{ gamestate.length }} Einträge):</b>
-    <ul>
+    <ul class="gamelog">
       <li
         v-for="action in gamestate"
         :key="action.id"
@@ -192,6 +165,17 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
+.gamescore {
+  min-height: 20vh;
+}
 
+.gamescore-preview {
+  padding-left: 25%;
+}
+
+.gamelog {
+  max-height: 70vh;
+  overflow-y: auto;
+}
 </style>

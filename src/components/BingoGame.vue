@@ -9,7 +9,7 @@
       class="content"
     >
       <h1 class="mx-5">
-        {{ bingo.name }} ({{ user }}, {{ gameUserName }})
+        {{ bingo.name }}
       </h1>
       <h4 class="mx-5">
         {{ bingo.description }}
