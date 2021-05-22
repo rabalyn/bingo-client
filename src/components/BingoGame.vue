@@ -122,11 +122,19 @@ export default {
         .filter(x => x.clicked)
         .map(x => x.idx)
       )
+    },
+    hasGamestate () {
+      return this.$store.state?.gamestate?.ids.length > 0
     }
   },
   watch: {
     user () {
       this.updateGameUserName()
+    },
+    hasGamestate (newVal, oldVal) {
+      if (newVal === false) {
+        this.resetClicks()
+      }
     }
   },
   created () {
