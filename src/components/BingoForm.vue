@@ -411,7 +411,6 @@ export default {
         this.wordsToImportFromTopics = this.topicWords
       }
 
-      await this.saveBingo({ force: true })
       this.isLoading = false
     },
     async addWordsToImportFromTopics () {

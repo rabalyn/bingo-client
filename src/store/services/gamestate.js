@@ -1,27 +1,37 @@
 // src/store/services/users.js
 import feathersClient, { makeServicePlugin, BaseModel } from '../../feathers-client'
 
-class Liveuser extends BaseModel {
+class Gamestate extends BaseModel {
   /* eslint-disable no-useless-constructor */
   constructor (data, options) {
     super(data, options)
   }
 
   // Required for $FeathersVuex plugin to work after production transpile.
-  static modelName = 'Liveusers'
+  static modelName = 'Gamestate'
   // Define default properties here
   static instanceDefaults () {
     return {
-      type: '',
-      name: ''
+      username: '',
+      bingoId: '',
+      clickedIdx: null,
+      word: null
     }
   }
 }
-const servicePath = 'liveusers'
+const servicePath = 'gamestate'
 const servicePlugin = makeServicePlugin({
-  Model: Liveuser,
+  Model: Gamestate,
   service: feathersClient.service(servicePath),
-  servicePath
+  servicePath,
+  handleEvents: {
+    removed: async (item, { model }) => {
+      await model.store.commit('gamestate/clearAll')
+      await model.store.dispatch('gamestate/find', { query: {} })
+
+      return true
+    }
+  }
 })
 
 // Setup the client-side Feathers hooks.
