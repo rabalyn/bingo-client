@@ -150,6 +150,21 @@ export default {
   },
   mounted () {
     this.updateGameUserName()
+    const { Gamestate } = this.$FeathersVuex.api
+    Gamestate.find({
+      query: {
+        bingoId: this.id,
+        $limit: 10000,
+        $skip: 0,
+        $sort: {
+          createdAt: -1
+        }
+      }
+    }).then(x => {
+      if (!x[0]) {
+        this.resetClicks()
+      }
+    })
   },
   methods: {
     updateGameUserName () {
