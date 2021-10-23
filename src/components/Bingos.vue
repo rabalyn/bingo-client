@@ -52,8 +52,26 @@
             <b-tag
               v-for="word in bingo.words"
               :key="word.id"
+              :type="word.altText ? 'is-warning is-light' : 'is-info is-light'"
             >
-              {{ word.name }}
+              <span
+                v-if="word.altText"
+                style="cursor: default;"
+              >
+                <b-tooltip
+                  position="is-bottom"
+                  multilined
+                  type="is-white"
+                >
+                  {{ word.altText }}
+                  <template v-slot:content>
+                    <img :src="word.name">
+                  </template>
+                </b-tooltip>
+              </span>
+              <span v-else>
+                {{ word.name }}
+              </span>
             </b-tag>
           </b-taglist>
 
@@ -62,8 +80,9 @@
             <b-tag
               v-for="topic in bingo.topics"
               :key="topic.id"
+              :type="topic.altText ? 'is-warning is-light' : 'is-info is-light'"
             >
-              {{ topic.name }}
+              {{ topic.altText ? topic.altText : topic.name }}
             </b-tag>
           </b-taglist>
         </div>

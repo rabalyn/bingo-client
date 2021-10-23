@@ -80,7 +80,21 @@
           @click="toggleClicked(idx)"
         >
           <span :class="{'highlight-text': word.clicked && highlightRainbow}">
-            {{ word.name }}
+            <b-tooltip
+              v-if="word.name.includes('https://') || word.name.includes('http://')"
+              position="is-bottom"
+              multilined
+              :label="word.altText"
+            >
+              <img
+                :src="word.name"
+                :alt="word.altText"
+                style="height: 12vh;"
+              >
+            </b-tooltip>
+            <span v-else>
+              {{ word.name }}
+            </span>
           </span>
         </div>
       </div>
@@ -256,6 +270,7 @@ export default {
 
   background-size: 1200% 1200%;
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 
   -webkit-text-stroke-width: 0.01em;

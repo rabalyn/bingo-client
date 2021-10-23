@@ -79,11 +79,28 @@
           <b-tag
             v-for="(word, idx) in newBingo.words"
             :key="`${word.id}_${new Date().toISOString()}_${idx}`"
-            type="is-info is-light"
+            :type="word.altText ? 'is-warning is-light' : 'is-info is-light'"
             closable
             @close="removeWord(idx)"
           >
-            {{ word.name }}
+            <span
+              v-if="word.altText"
+              style="cursor: default;"
+            >
+              <b-tooltip
+                position="is-bottom"
+                multilined
+                type="is-white"
+              >
+                {{ word.altText }}
+                <template v-slot:content>
+                  <img :src="word.name">
+                </template>
+              </b-tooltip>
+            </span>
+            <span v-else>
+              {{ word.name }}
+            </span>
           </b-tag>
         </b-taglist>
 
@@ -242,7 +259,8 @@ export default {
 
       const newWord = new this.$FeathersVuex.api.Words({
         id: word.id,
-        name: word.name
+        name: word.name,
+        altText: word.altText
       })
       this.newBingo.words.push(newWord)
 
@@ -264,7 +282,8 @@ export default {
 
       const newTopic = new this.$FeathersVuex.api.Topics({
         id: topic.id,
-        name: topic.name
+        name: topic.name,
+        altText: topic.altText
       })
       try {
         this.isLoading = true

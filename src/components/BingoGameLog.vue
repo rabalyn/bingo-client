@@ -58,7 +58,7 @@
           :class="{'has-background-success-light': action.active, 'has-background-danger-light': !action.active}"
         >
           {{ action.user ? action.user : `Gast_${action.username.substring(0, 8)}` }}:
-          "{{ action.word.name }}"<br>
+          "{{ action.word.altText ? action.word.altText : action.word.name }}"<br>
           ({{ new Date(action.createdAt).toLocaleString() }})
         </span>
       </li>
